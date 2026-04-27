@@ -36,10 +36,10 @@ function LoginPageContent() {
         const role = (session?.user as any)?.role;
 
         if (role === 'ADMIN') {
-          router.push('/dashboard');
+          window.location.href = '/dashboard';
         } else {
           const callbackUrl = searchParams.get('callbackUrl') || '/';
-          router.push(callbackUrl);
+          window.location.href = callbackUrl;
         }
       }
     } catch (err) {

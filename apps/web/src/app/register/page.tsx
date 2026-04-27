@@ -59,9 +59,9 @@ export default function RegisterPage() {
 
       if (signInRes?.error) {
         // Registration succeeded but auto-login failed — redirect to login
-        router.push('/login');
+        window.location.href = '/login';
       } else {
-        router.push('/');
+        window.location.href = '/';
       }
     } catch (err) {
       setError('An unexpected error occurred. Please try again.');
