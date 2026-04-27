@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 220 20% 97%;
+    --foreground: 222 47% 11%;
+    
+    --primary: 38 92% 50%; /* Golden amber */
+    --primary-foreground: 222 47% 11%;
+    --primary-light: 38 92% 60%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    
+    --border: 214 32% 91%;
+  }
+
+  .dark {
+    --background: 222 47% 8%; /* Deep slate */
+    --foreground: 210 40% 98%;
+    
+    --primary: 38 92% 50%;
+    --primary-foreground: 222 47% 11%;
+    --primary-light: 38 92% 60%;
+    
+    --card: 222 47% 11%;
+    --card-foreground: 210 40% 98%;
+    
+    --border: 217 33% 17%;
+  }
+}
+
+@layer base {
+  body {
+    @apply bg-background text-foreground antialiased selection:bg-primary/30 selection:text-foreground;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    @apply bg-card/80 backdrop-blur-lg border border-border/50 shadow-xl;
+  }
+  
+  .glass-dark {
+    @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl;
+  }
+  
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-primary-light;
+  }
+
+  .animate-delay-100 { animation-delay: 100ms; }
+  .animate-delay-200 { animation-delay: 200ms; }
+  .animate-delay-300 { animation-delay: 300ms; }
+}

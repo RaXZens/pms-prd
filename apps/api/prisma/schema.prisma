@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model RoomType {
+  id           String     @id @default(uuid())
+  name         String
+  description  String?
+  maxOccupancy Int
+  totalUnits   Int
+  imageUrls    Json
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  rates        RoomRate[]
+  bookings     Booking[]
+}
+
+model RoomRate {
+  id         String   @id @default(uuid())
+  roomTypeId String
+  date       DateTime @db.Date
+  price      Decimal
+  createdAt  DateTime @default(now())
+  roomType   RoomType @relation(fields: [roomTypeId], references: [id])
+
+  @@unique([roomTypeId, date])
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  UNPAID
+  PAID
+}
+
+model Booking {
+  id              String        @id @default(uuid())
+  roomTypeId      String
+  guestId         String?
+  checkIn         DateTime      @db.Date
+  checkOut        DateTime      @db.Date
+  totalPrice      Decimal
+  status          BookingStatus @default(PENDING)
+  paymentStatus   PaymentStatus @default(UNPAID)
+  stripeSessionId String?
+  guestName       String
+  guestPhone      String
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  roomType        RoomType      @relation(fields: [roomTypeId], references: [id])
+  guest           User?         @relation(fields: [guestId], references: [id])
+}
+
+enum Provider {
+  EMAIL
+  GOOGLE
+}
+
+model User {
+  id           String    @id @default(uuid())
+  email        String    @unique
+  name         String
+  passwordHash String?
+  provider     Provider
+  createdAt    DateTime  @default(now())
+  bookings     Booking[]
+}
+
+model Admin {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
+}

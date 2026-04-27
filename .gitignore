@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# testing
+coverage/
+
+# next.js
+.next/
+out/
+
+# turbo
+.turbo/
+
+# build outputs
+dist/
+build/
+
+# misc
+.DS_Store
+*.pem
+*.log
+
+# env files (NEVER commit secrets)
+.env
+.env*.local
+.env.development
+.env.production
+
+# prisma
+/apps/api/prisma/dev.db
+/apps/api/prisma/dev.db-journal
