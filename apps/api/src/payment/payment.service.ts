@@ -46,8 +46,8 @@ export class PaymentService {
           },
         ],
         mode: 'payment',
-        success_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/book?success=true&bookingId=${bookingId}`,
-        cancel_url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/book?canceled=true`,
+        success_url: `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/book?success=true&bookingId=${bookingId}`,
+        cancel_url: `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/book?canceled=true`,
         client_reference_id: bookingId,
       });
 
