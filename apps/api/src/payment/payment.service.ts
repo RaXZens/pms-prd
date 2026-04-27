@@ -26,8 +26,8 @@ export class PaymentService {
     if (!booking) throw new BadRequestException('Booking not found');
 
     try {
-      if (!process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.startsWith('sk_test_...')) {
-        throw new Error('Mock key detected');
+      if (!process.env.STRIPE_SECRET_KEY) {
+        throw new Error('Stripe secret key missing');
       }
 
       const session = await this.stripe.checkout.sessions.create({
@@ -55,7 +55,7 @@ export class PaymentService {
     } catch (e: any) {
       console.log('Stripe checkout bypassed:', e.message);
       // Fallback for simulation if stripe fails due to invalid key
-      return { url: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/book?success=true&simulate_webhook_for=${bookingId}` };
+      return { url: `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/book?success=true&simulate_webhook_for=${bookingId}` };
     }
   }
 
