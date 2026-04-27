@@ -2,13 +2,13 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import Link from 'next/link';
 
 import { signIn, getSession } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function LoginPage() {
+function LoginPageContent() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -134,5 +134,17 @@ export default function LoginPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50 flex flex-col justify-center items-center">
+        <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    }>
+      <LoginPageContent />
+    </Suspense>
   );
 }

@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -9,7 +9,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 
 import { useSession } from 'next-auth/react';
 
-export default function BookPage() {
+function BookPageContent() {
   const { data: session } = useSession();
   const [step, setStep] = useState(1);
   const [mounted, setMounted] = useState(false);
@@ -387,5 +387,17 @@ export default function BookPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function BookPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gray-50/50 flex items-center justify-center">
+        <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+      </div>
+    }>
+      <BookPageContent />
+    </Suspense>
   );
 }
