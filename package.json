@@ -16,6 +16,9 @@
     "prettier": "^3.2.5",
     "turbo": "latest"
   },
+  "overrides": {
+    "next": "16.0.10"
+  },
   "engines": {
     "node": ">=18"
   },
