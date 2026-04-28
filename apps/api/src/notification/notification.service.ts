@@ -40,7 +40,7 @@ export class NotificationService {
             'Authorization': `Bearer ${sendgridApiKey}`,
           },
           body: JSON.stringify({
-            personalizations: [{ to: [{ email: adminEmail }], subject: `Booking Confirmed #${data.bookingId.slice(0, 8).toUpperCase()} - Royal Amethyst` }],
+            personalizations: [{ to: [{ email: data.guestEmail }], subject: `Booking Confirmed #${data.bookingId.slice(0, 8).toUpperCase()} - Royal Amethyst` }],
             from: { email: senderEmail, name: 'Royal Amethyst' },
             content: [{ type: 'text/html', value: `<h2>Hello ${data.guestName},</h2><p>Your reservation <strong>#${data.bookingId.slice(0, 8).toUpperCase()}</strong> has been confirmed.</p><h3>Details:</h3><ul><li><strong>Room:</strong> ${data.roomTypeName}</li><li><strong>Stay:</strong> ${data.checkIn} to ${data.checkOut}</li><li><strong>Total Paid:</strong> ฿${data.totalPrice.toLocaleString()}</li></ul><p>We look forward to welcoming you!</p>` }],
           }),
