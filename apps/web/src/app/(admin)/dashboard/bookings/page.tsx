@@ -126,119 +126,170 @@ export default function BookingsPage() {
 
   return (
     <>
-      <div className="animate-fade-in space-y-6 relative">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Bookings Management</h1>
-        <Button onClick={() => setShowCreateModal(true)}>+ New Booking</Button>
-      </div>
+      <div className="animate-fade-in space-y-8 relative font-sans text-slate-800">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-serif font-bold text-slate-900 tracking-tight">Bookings Management</h1>
+          <Button onClick={() => setShowCreateModal(true)} className="rounded-xl px-5 bg-primary hover:bg-primary-light shadow-md font-semibold transition-all duration-300">
+            + New Booking
+          </Button>
+        </div>
 
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <CardTitle>Filters</CardTitle>
-          <div className="flex gap-4">
-            <select className="border p-2 rounded" value={filterStatus} onChange={e => setFilterStatus(e.target.value)}>
-              <option value="">All Statuses</option>
-              <option value="PENDING">Pending</option>
-              <option value="CONFIRMED">Confirmed</option>
-              <option value="CANCELLED">Cancelled</option>
-            </select>
-            <Input type="date" value={filterDate} onChange={e => setFilterDate(e.target.value)} />
-            {(filterStatus || filterDate) && (
-              <Button variant="ghost" onClick={() => { setFilterStatus(''); setFilterDate(''); }}>Clear</Button>
-            )}
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? <p className="text-gray-500 py-4">Loading bookings...</p> : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm text-left">
-                <thead className="text-xs text-gray-500 uppercase bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3">Guest</th>
-                    <th className="px-6 py-3">Room Type</th>
-                    <th className="px-6 py-3">Dates</th>
-                    <th className="px-6 py-3">Status</th>
-                    <th className="px-6 py-3">Payment</th>
-                    <th className="px-6 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {currentItems.map(b => (
-                    <tr key={b.id} className="bg-white border-b hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 font-medium">{b.guestName} <br/><span className="text-gray-400 font-normal">{b.guestPhone}</span></td>
-                      <td className="px-6 py-4">{b.roomType?.name || 'Unknown'}</td>
-                      <td className="px-6 py-4 whitespace-nowrap">{new Date(b.checkIn).toLocaleDateString()} <br/>to {new Date(b.checkOut).toLocaleDateString()}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2 py-1 rounded text-xs font-medium ${
-                          b.status === 'CONFIRMED' ? 'bg-green-100 text-green-700' :
-                          b.status === 'PENDING' ? 'bg-yellow-100 text-yellow-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {b.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                         <span className={`px-2 py-1 rounded text-xs font-medium ${b.paymentStatus === 'PAID' ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>{b.paymentStatus}</span>
-                      </td>
-                      <td className="px-6 py-4 text-right space-x-2 whitespace-nowrap">
-                        <Button variant="outline" size="sm" onClick={() => {
-                          setFormData({
-                            roomTypeId: b.roomTypeId,
-                            checkIn: new Date(b.checkIn).toISOString().split('T')[0],
-                            checkOut: new Date(b.checkOut).toISOString().split('T')[0],
-                            guestName: b.guestName,
-                            guestPhone: b.guestPhone
-                          });
-                          setShowEditModal(b);
-                        }}>Edit</Button>
-                        {b.paymentStatus !== 'PAID' && b.status !== 'CANCELLED' && (
-                          <Button variant="outline" size="sm" onClick={() => handleStatusUpdate(b.id, 'CONFIRMED', 'PAID')}>Mark Paid</Button>
-                        )}
-                        {b.status !== 'CANCELLED' && (
-                          <Button variant="ghost" size="sm" className="text-red-500" onClick={() => handleStatusUpdate(b.id, 'CANCELLED')}>Cancel</Button>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  {filteredBookings.length === 0 && (
-                    <tr>
-                      <td colSpan={6} className="px-6 py-8 text-center text-gray-500">No bookings match criteria</td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-              
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between px-6 py-4 border-t bg-gray-50/50">
-                  <p className="text-xs text-gray-500 font-medium">
-                    Showing Page <span className="font-bold text-gray-900">{currentPage}</span> of <span className="font-bold text-gray-900">{totalPages}</span>
-                  </p>
-                  <div className="flex gap-2">
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      disabled={currentPage === 1} 
-                      onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                    >
-                      Previous
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      disabled={currentPage === totalPages} 
-                      onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                    >
-                      Next
-                    </Button>
-                  </div>
-                </div>
+        {/* Filters Card */}
+        <Card className="border border-slate-100 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
+          <CardHeader className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-100/60 px-8 py-5 bg-slate-50/30">
+            <CardTitle className="text-lg font-serif font-bold text-slate-900">Filters</CardTitle>
+            <div className="flex flex-row items-center gap-4 w-full sm:w-auto">
+              <select 
+                className="flex h-11 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm" 
+                value={filterStatus} 
+                onChange={e => setFilterStatus(e.target.value)}
+              >
+                <option value="">All Statuses</option>
+                <option value="PENDING">Pending</option>
+                <option value="CONFIRMED">Confirmed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
+              <Input 
+                type="date" 
+                value={filterDate} 
+                onChange={e => setFilterDate(e.target.value)} 
+                className="rounded-xl border-slate-200 bg-white h-11 px-4 shadow-sm focus-visible:ring-primary/20"
+              />
+              {(filterStatus || filterDate) && (
+                <Button variant="ghost" className="rounded-xl hover:bg-slate-100 text-slate-500 h-11 text-sm font-medium" onClick={() => { setFilterStatus(''); setFilterDate(''); }}>Clear</Button>
               )}
             </div>
-          )}
-        </CardContent>
-      </Card>
+          </CardHeader>
 
+          {/* Bookings Table */}
+          <CardContent className="p-0">
+            {loading ? (
+              <p className="text-slate-400 py-16 text-center text-sm">Loading bookings...</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm text-left text-slate-600">
+                  <thead className="text-xs text-slate-400 uppercase bg-slate-50/50 tracking-wider">
+                    <tr>
+                      <th className="px-8 py-4">Guest</th>
+                      <th className="px-8 py-4">Room Type</th>
+                      <th className="px-8 py-4">Dates</th>
+                      <th className="px-8 py-4">Status</th>
+                      <th className="px-8 py-4">Payment</th>
+                      <th className="px-8 py-4 text-right">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {currentItems.map(b => (
+                      <tr key={b.id} className="hover:bg-slate-50/50 transition-colors duration-200">
+                        <td className="px-8 py-5 font-bold text-slate-900 whitespace-nowrap">
+                          {b.guestName} 
+                          <div className="text-slate-400 font-normal text-xs mt-0.5">{b.guestPhone}</div>
+                        </td>
+                        <td className="px-8 py-5 text-slate-600">{b.roomType?.name || 'Unknown'}</td>
+                        <td className="px-8 py-5 whitespace-nowrap text-slate-500">
+                          {new Date(b.checkIn).toLocaleDateString()} 
+                          <span className="text-slate-300 mx-2">→</span> 
+                          {new Date(b.checkOut).toLocaleDateString()}
+                        </td>
+                        <td className="px-8 py-5">
+                          <span className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide flex items-center justify-center w-28 border ${
+                            b.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
+                            b.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-200' :
+                            'bg-red-50 text-red-700 border-red-200'
+                          }`}>
+                            {b.status}
+                          </span>
+                        </td>
+                        <td className="px-8 py-5">
+                          <span className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide flex items-center justify-center w-24 border ${
+                            b.paymentStatus === 'PAID' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 
+                            'bg-red-50 text-red-700 border-red-200'
+                          }`}>
+                            {b.paymentStatus}
+                          </span>
+                        </td>
+                        <td className="px-8 py-5 text-right space-x-2 whitespace-nowrap">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="rounded-xl border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 h-9 font-medium"
+                            onClick={() => {
+                              setFormData({
+                                roomTypeId: b.roomTypeId,
+                                checkIn: new Date(b.checkIn).toISOString().split('T')[0],
+                                checkOut: new Date(b.checkOut).toISOString().split('T')[0],
+                                guestName: b.guestName,
+                                guestPhone: b.guestPhone
+                              });
+                              setShowEditModal(b);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          {b.paymentStatus !== 'PAID' && b.status !== 'CANCELLED' && (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              className="rounded-xl border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-200 h-9 font-medium"
+                              onClick={() => handleStatusUpdate(b.id, 'CONFIRMED', 'PAID')}
+                            >
+                              Mark Paid
+                            </Button>
+                          )}
+                          {b.status !== 'CANCELLED' && (
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              className="rounded-xl text-red-500 hover:bg-red-50 hover:text-red-600 h-9 font-medium"
+                              onClick={() => handleStatusUpdate(b.id, 'CANCELLED')}
+                            >
+                              Cancel
+                            </Button>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                    {filteredBookings.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="px-8 py-16 text-center text-slate-400 text-sm">No bookings match your criteria</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+                
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between px-8 py-5 border-t border-slate-100 bg-slate-50/50">
+                    <p className="text-xs text-slate-400 font-medium">
+                      Showing Page <span className="font-bold text-slate-900">{currentPage}</span> of <span className="font-bold text-slate-900">{totalPages}</span>
+                    </p>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-xl border-slate-200 h-9 font-medium text-slate-600 hover:bg-slate-100"
+                        disabled={currentPage === 1} 
+                        onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                      >
+                        Previous
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="rounded-xl border-slate-200 h-9 font-medium text-slate-600 hover:bg-slate-100"
+                        disabled={currentPage === totalPages} 
+                        onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                      >
+                        Next
+                      </Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
 
       {/* Modals */}
       {(showCreateModal || showEditModal) && (

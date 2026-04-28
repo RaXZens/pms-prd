@@ -87,19 +87,20 @@ export default function CalendarPage() {
   };
 
   return (
-    <div className="animate-fade-in space-y-6">
-      <h1 className="text-3xl font-bold">Rate & Availability Calendar</h1>
+    <div className="animate-fade-in space-y-8 font-sans text-slate-800">
+      <h1 className="text-3xl font-serif font-bold text-slate-900 tracking-tight">Rate & Availability Calendar</h1>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-1 space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Room Selection</CardTitle>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="lg:col-span-1 space-y-8">
+          {/* Card 1: Room Selection */}
+          <Card className="border border-slate-100 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
+            <CardHeader className="border-b border-slate-100/60 px-8 py-5">
+              <CardTitle className="text-lg font-serif font-bold text-slate-900">Room Selection</CardTitle>
             </CardHeader>
-            <CardContent>
-              {loading ? <p>Loading...</p> : (
+            <CardContent className="p-8 pt-6">
+              {loading ? <p className="text-slate-400 text-center py-4">Loading...</p> : (
                 <select 
-                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                  className="flex h-11 w-full rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm"
                   value={selectedRoom} 
                   onChange={e => setSelectedRoom(e.target.value)}
                 >
@@ -109,54 +110,67 @@ export default function CalendarPage() {
             </CardContent>
           </Card>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Bulk Rate Update</CardTitle>
+          {/* Card 2: Bulk Update */}
+          <Card className="border border-slate-100 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
+            <CardHeader className="border-b border-slate-100/60 px-8 py-5">
+              <CardTitle className="text-lg font-serif font-bold text-slate-900">Bulk Rate Update</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
+            <CardContent className="space-y-4 p-8 pt-6">
               <div>
-                <label className="text-sm font-medium">Start Date</label>
+                <label className="text-sm font-semibold tracking-wide text-slate-500 uppercase block mb-1">Start Date</label>
                 <Input 
                   type="date" 
                   min={new Date().toISOString().split('T')[0]} 
                   value={bulkData.startDate} 
                   onChange={e => setBulkData({...bulkData, startDate: e.target.value})} 
+                  className="rounded-xl border-slate-200 h-11 focus-visible:ring-primary/20 shadow-sm"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">End Date</label>
+                <label className="text-sm font-semibold tracking-wide text-slate-500 uppercase block mb-1">End Date</label>
                 <Input 
                   type="date" 
                   disabled={!bulkData.startDate}
                   min={bulkData.startDate ? new Date(new Date(bulkData.startDate).getTime() + 86400000).toISOString().split('T')[0] : ''}
                   value={bulkData.endDate} 
                   onChange={e => setBulkData({...bulkData, endDate: e.target.value})} 
+                  className="rounded-xl border-slate-200 h-11 focus-visible:ring-primary/20 shadow-sm"
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Nightly Rate (฿)</label>
-                <Input type="number" min="0" value={bulkData.price} onChange={e => setBulkData({...bulkData, price: e.target.value})} />
+                <label className="text-sm font-semibold tracking-wide text-slate-500 uppercase block mb-1">Nightly Rate (฿)</label>
+                <Input 
+                  type="number" 
+                  min="0" 
+                  value={bulkData.price} 
+                  onChange={e => setBulkData({...bulkData, price: e.target.value})} 
+                  className="rounded-xl border-slate-200 h-11 focus-visible:ring-primary/20 shadow-sm"
+                  placeholder="e.g. 2500"
+                />
               </div>
 
               {errorMsg && (
-                <p className="text-red-500 text-sm font-medium animate-fade-in">⚠️ {errorMsg}</p>
+                <p className="text-red-500 text-sm font-medium animate-fade-in flex items-center gap-2">⚠️ {errorMsg}</p>
               )}
               {successMsg && (
-                <p className="text-emerald-600 text-sm font-medium animate-fade-in">✅ {successMsg}</p>
+                <p className="text-emerald-600 text-sm font-medium animate-fade-in flex items-center gap-2">✅ {successMsg}</p>
               )}
 
-              <Button className="w-full shadow-md hover:shadow-lg transition-all" onClick={handleBulkUpdate}>Apply Rates</Button>
+              <Button className="w-full h-11 rounded-xl bg-primary hover:bg-primary-light text-primary-foreground font-semibold shadow-md hover:shadow-primary/20 transition-all duration-300 mt-2" onClick={handleBulkUpdate}>
+                Apply Rates
+              </Button>
             </CardContent>
           </Card>
+
         </div>
 
         <div className="lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle>Next 30 Days Overview</CardTitle>
+          <Card className="border border-slate-100 bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.02)] overflow-hidden">
+            <CardHeader className="border-b border-slate-100/60 px-8 py-5">
+              <CardTitle className="text-lg font-serif font-bold text-slate-900">Next 30 Days Overview</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            <CardContent className="p-8 pt-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {Array.from({ length: 30 }).map((_, i) => {
                   const d = new Date();
                   d.setDate(d.getDate() + i);
@@ -169,7 +183,6 @@ export default function CalendarPage() {
                   const currentRoom = roomTypes.find(r => r.id === selectedRoom);
                   const totalUnits = currentRoom?.totalUnits || 0;
                   
-                  // Count overlapping bookings for this date (timezone-agnostic)
                   const bookedUnits = bookings.filter(b => {
                     const bInStr = b.checkIn.includes('T') ? b.checkIn.split('T')[0] : b.checkIn;
                     const bOutStr = b.checkOut.includes('T') ? b.checkOut.split('T')[0] : b.checkOut;
@@ -179,16 +192,29 @@ export default function CalendarPage() {
                   const isSoldOut = bookedUnits >= totalUnits;
 
                   return (
-                    <div key={i} className={`border rounded-lg p-3 text-center flex flex-col justify-center items-center h-28 transition-all ${isSoldOut ? 'bg-red-50/50 border-red-200' : 'bg-gray-50'}`}>
-                      <div className="text-xs text-gray-500 font-medium mb-1">{d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</div>
+                    <div 
+                      key={i} 
+                      className={`rounded-2xl p-4 text-center flex flex-col justify-center items-center h-32 transition-all duration-300 border ${
+                        isSoldOut 
+                          ? 'bg-red-50/40 border-red-100 hover:shadow-md hover:border-red-200' 
+                          : 'bg-slate-50/50 border-slate-100 hover:bg-white hover:shadow-md hover:border-slate-200'
+                      }`}
+                    >
+                      <div className="text-xs text-slate-400 font-bold tracking-wide mb-1">
+                        {d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                      </div>
                       {rateObj ? (
-                        <div className="font-bold text-primary text-base">฿{rateObj.price}</div>
+                        <div className="font-bold text-slate-900 text-lg">฿{rateObj.price}</div>
                       ) : (
-                        <div className="text-xs text-red-400 italic">No rate set</div>
+                        <div className="text-xs text-red-400 font-medium italic mt-0.5">No rate set</div>
                       )}
                       
                       {totalUnits > 0 && (
-                        <div className={`text-[10px] mt-2 font-semibold px-2 py-0.5 rounded-full ${isSoldOut ? 'bg-red-500 text-white' : 'bg-emerald-100 text-emerald-800'}`}>
+                        <div className={`text-[10px] mt-3 font-bold px-2 py-1 rounded-full border ${
+                          isSoldOut 
+                            ? 'bg-red-50 text-red-600 border-red-200' 
+                            : 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                        }`}>
                           {isSoldOut ? 'Sold Out' : `Avail: ${totalUnits - bookedUnits}/${totalUnits}`}
                         </div>
                       )}

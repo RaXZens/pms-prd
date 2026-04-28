@@ -164,7 +164,7 @@ export default function MyBookingsPage() {
                       </div>
                       <div>
                         <p className="text-xs text-gray-500 uppercase tracking-wide">Total</p>
-                        <p className="font-bold text-lg text-primary">${Number(booking.totalPrice).toFixed(2)}</p>
+                        <p className="font-bold text-lg text-primary">฿{Number(booking.totalPrice).toLocaleString()}</p>
                       </div>
                     </div>
 
