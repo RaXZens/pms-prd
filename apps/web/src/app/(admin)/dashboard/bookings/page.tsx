@@ -30,6 +30,7 @@ export default function BookingsPage() {
     guestName: '',
     guestPhone: '',
   });
+  const [formErrors, setFormErrors] = useState<any>({});
 
   const loadData = () => {
     setLoading(true);
@@ -51,13 +52,31 @@ export default function BookingsPage() {
   }, []);
 
   const handleCreate = async () => {
-    if (!formData.roomTypeId) {
-      alert('Please select a room type.');
+    const errors: any = {};
+    if (!formData.guestName) errors.guestName = 'Guest name is required.';
+    if (!formData.guestPhone) {
+      errors.guestPhone = 'Phone number is required.';
+    } else if (!/^\d{10}$/.test(formData.guestPhone)) {
+      errors.guestPhone = 'Phone number must be exactly 10 digits.';
+    }
+    if (!formData.roomTypeId) errors.roomTypeId = 'Please select a room type.';
+    if (!formData.checkIn) errors.checkIn = 'Check-in date required.';
+    if (!formData.checkOut) errors.checkOut = 'Check-out date required.';
+    
+    if (formData.checkIn && formData.checkOut && new Date(formData.checkIn) >= new Date(formData.checkOut)) {
+      errors.checkOut = 'Check-out must be after check-in.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
       return;
     }
+
+    setFormErrors({});
     try {
       await apiClient.post('/bookings', formData);
       setShowCreateModal(false);
+      setFormData({ roomTypeId: '', checkIn: '', checkOut: '', guestName: '', guestPhone: '' });
       loadData();
     } catch (e) {
       alert('Failed to create booking');
@@ -232,10 +251,12 @@ export default function BookingsPage() {
               <div>
                 <label className="text-sm font-semibold text-gray-700 block mb-1">Guest Name</label>
                 <Input disabled={!!showEditModal} value={formData.guestName} onChange={e => setFormData({...formData, guestName: e.target.value})} className="rounded-xl" />
+                {formErrors.guestName && <p className="text-xs text-red-500 mt-1">{formErrors.guestName}</p>}
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700 block mb-1">Guest Phone</label>
                 <Input disabled={!!showEditModal} value={formData.guestPhone} onChange={e => setFormData({...formData, guestPhone: e.target.value})} className="rounded-xl" />
+                {formErrors.guestPhone && <p className="text-xs text-red-500 mt-1">{formErrors.guestPhone}</p>}
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700 block mb-1">Room Type</label>
@@ -244,19 +265,22 @@ export default function BookingsPage() {
                   <option value="">Select Room</option>
                   {roomTypes.map(rt => <option key={rt.id} value={rt.id}>{rt.name}</option>)}
                 </select>
+                {formErrors.roomTypeId && <p className="text-xs text-red-500 mt-1">{formErrors.roomTypeId}</p>}
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-sm font-semibold text-gray-700 block mb-1">Check In</label>
                   <Input type="date" value={formData.checkIn} onChange={e => setFormData({...formData, checkIn: e.target.value})} className="rounded-xl" />
+                  {formErrors.checkIn && <p className="text-xs text-red-500 mt-1">{formErrors.checkIn}</p>}
                 </div>
                 <div>
                   <label className="text-sm font-semibold text-gray-700 block mb-1">Check Out</label>
                   <Input type="date" value={formData.checkOut} onChange={e => setFormData({...formData, checkOut: e.target.value})} className="rounded-xl" />
+                  {formErrors.checkOut && <p className="text-xs text-red-500 mt-1">{formErrors.checkOut}</p>}
                 </div>
               </div>
               <div className="flex justify-end gap-3 pt-6 border-t mt-6">
-                <Button variant="ghost" className="rounded-xl px-5" onClick={() => { setShowCreateModal(false); setShowEditModal(null); }}>Cancel</Button>
+                <Button variant="ghost" className="rounded-xl px-5" onClick={() => { setShowCreateModal(false); setShowEditModal(null); setFormErrors({}); }}>Cancel</Button>
                 <Button className="rounded-xl px-5 shadow-md" onClick={showCreateModal ? handleCreate : handleEdit}>Save</Button>
               </div>
             </CardContent>
