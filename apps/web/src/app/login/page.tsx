@@ -125,6 +125,7 @@ function LoginPageContent() {
             </form>
           </CardContent>
         </Card>
+        <p className="text-center text-sm text-gray-500 mt-4">Admin: admin@pms.local / password: admin123</p>
         
         <p className="text-center text-sm text-gray-500 mt-8">
           Don't have an account?{' '}
