@@ -255,7 +255,7 @@ export default function BookingsPage() {
               </div>
               <div>
                 <label className="text-sm font-semibold text-gray-700 block mb-1">Guest Phone</label>
-                <Input disabled={!!showEditModal} value={formData.guestPhone} onChange={e => setFormData({...formData, guestPhone: e.target.value})} className="rounded-xl" />
+                <Input disabled={!!showEditModal} type="text" maxLength={10} value={formData.guestPhone} onChange={e => { const val = e.target.value.replace(/\D/g, '').slice(0, 10); setFormData({...formData, guestPhone: val}) }} className="rounded-xl" placeholder="0XXXXXXXXX" />
                 {formErrors.guestPhone && <p className="text-xs text-red-500 mt-1">{formErrors.guestPhone}</p>}
               </div>
               <div>
