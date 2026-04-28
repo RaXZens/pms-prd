@@ -13,6 +13,7 @@ export default function MyBookingsPage() {
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
+  const [redirectingId, setRedirectingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (session?.user) {
@@ -20,11 +21,29 @@ export default function MyBookingsPage() {
     } else {
       setLoading(false);
     }
-  }, [session]);
+  }, [(session?.user as any)?.id]);
+
+  const handlePayLater = async (bookingId: string) => {
+    setRedirectingId(bookingId);
+    try {
+      const checkout = await apiClient.post('/payment/checkout', {
+        bookingId,
+      });
+      if (checkout.url) {
+        window.location.href = checkout.url;
+      }
+    } catch (e) {
+      console.error('Failed to initiate payment:', e);
+      setRedirectingId(null);
+    }
+  };
 
   const loadBookings = async () => {
     const userId = (session?.user as any)?.id;
-    if (!userId) return;
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
     try {
       const data = await apiClient.get(`/bookings?guestId=${userId}`);
       setBookings(data);
@@ -170,7 +189,14 @@ export default function MyBookingsPage() {
 
                     {booking.status === 'PENDING' && (
                       <div className="mt-4 pt-4 border-t flex items-center justify-between">
-                        <p className="text-sm text-amber-600">⏳ Awaiting payment confirmation</p>
+                        <p className="text-sm text-amber-600 font-medium">⏳ Awaiting payment confirmation</p>
+                        <Button 
+                          onClick={() => handlePayLater(booking.id)} 
+                          disabled={redirectingId !== null}
+                          className="rounded-xl px-5 bg-primary hover:bg-primary-light text-primary-foreground font-semibold shadow-md transition-all duration-300"
+                        >
+                          {redirectingId === booking.id ? 'Redirecting...' : 'Pay Now'}
+                        </Button>
                       </div>
                     )}
 

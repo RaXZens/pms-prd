@@ -32,6 +32,7 @@ export class PaymentService {
 
       const session = await this.stripe.checkout.sessions.create({
         payment_method_types: ['card'],
+        expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // Expires in 30 minutes
         line_items: [
           {
             price_data: {

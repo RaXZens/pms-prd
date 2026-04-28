@@ -10,6 +10,7 @@ export default function Home() {
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [rooms, setRooms] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [hasPendingBooking, setHasPendingBooking] = useState(false);
 
   useEffect(() => {
     apiClient.get('/room-types')
@@ -22,6 +23,21 @@ export default function Home() {
         setLoading(false);
       });
   }, []);
+
+  useEffect(() => {
+    if (session?.user) {
+      const userId = (session?.user as any)?.id;
+      if (!userId) return;
+      apiClient.get(`/bookings?guestId=${userId}`)
+        .then(data => {
+          if (Array.isArray(data)) {
+            const pending = data.some(b => b.status === 'PENDING');
+            setHasPendingBooking(pending);
+          }
+        })
+        .catch(err => console.error('Failed to load guest bookings:', err));
+    }
+  }, [(session?.user as any)?.id]);
 
   const scrollToDiscover = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -57,8 +73,14 @@ export default function Home() {
                 <Button 
                   variant="ghost" 
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="flex items-center gap-2 hover:bg-primary/10 rounded-full px-4 text-foreground/80 hover:text-foreground"
+                  className="relative flex items-center gap-2 hover:bg-primary/10 rounded-full px-4 text-foreground/80 hover:text-foreground"
                 >
+                  {hasPendingBooking && (
+                    <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                    </span>
+                  )}
                   <span className="text-sm font-medium">
                     {session.user?.name || session.user?.email}
                   </span>
@@ -73,7 +95,7 @@ export default function Home() {
                 </Button>
 
                 {dropdownOpen && (
-                  <div className="absolute right-0 mt-3 w-52 bg-background/95 backdrop-blur-md border border-primary/20 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden">
+                  <div className="absolute right-0 mt-3 w-56 bg-background/95 backdrop-blur-md border border-primary/20 rounded-2xl shadow-2xl py-2 z-50 overflow-hidden">
                     {(session.user as any)?.role === 'ADMIN' && (
                       <>
                         <Link 
@@ -88,13 +110,30 @@ export default function Home() {
                     )}
                     {(session.user as any)?.role !== 'ADMIN' && (
                       <>
-                        <Link 
-                          href="/my-bookings"
-                          onClick={() => setDropdownOpen(false)}
-                          className="block px-5 py-3 text-sm text-foreground/80 hover:bg-primary/10 hover:text-primary transition-colors font-medium"
-                        >
-                          My Reservations
-                        </Link>
+                        <div className="px-3 py-1">
+                          <Link 
+                            href="/my-bookings"
+                            onClick={() => setDropdownOpen(false)}
+                            className={`flex items-center justify-between rounded-xl px-4 py-2.5 text-sm font-semibold transition-all duration-300 ${
+                              hasPendingBooking 
+                                ? 'bg-amber-50/60 text-amber-800 hover:bg-amber-50 border border-amber-200/60 shadow-sm shadow-amber-500/5' 
+                                : 'text-foreground/80 hover:bg-primary/10 hover:text-primary'
+                            }`}
+                          >
+                            <span>My Reservations</span>
+                            {hasPendingBooking && (
+                              <span className="flex h-2 w-2 relative">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500"></span>
+                              </span>
+                            )}
+                          </Link>
+                          {hasPendingBooking && (
+                            <p className="text-[10px] text-amber-600 font-bold px-4 mt-1.5 flex items-center gap-1">
+                              ⚠️ ยังไม่ชำระเงิน
+                            </p>
+                          )}
+                        </div>
                         <div className="border-t border-primary/10 my-1" />
                       </>
                     )}

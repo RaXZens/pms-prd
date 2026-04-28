@@ -119,6 +119,16 @@ export class BookingService {
   }
 
   async getBookingsByGuest(guestId: string): Promise<Booking[]> {
+    // Auto-cancel pending bookings older than 30 minutes
+    const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+    await this.prisma.booking.updateMany({
+      where: {
+        status: BookingStatus.PENDING,
+        createdAt: { lt: thirtyMinsAgo },
+      },
+      data: { status: BookingStatus.CANCELLED },
+    });
+
     return this.prisma.booking.findMany({
       where: { guestId },
       include: { roomType: true },
@@ -127,6 +137,16 @@ export class BookingService {
   }
   
   async getAllBookings(): Promise<Booking[]> {
+    // Auto-cancel pending bookings older than 30 minutes
+    const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
+    await this.prisma.booking.updateMany({
+      where: {
+        status: BookingStatus.PENDING,
+        createdAt: { lt: thirtyMinsAgo },
+      },
+      data: { status: BookingStatus.CANCELLED },
+    });
+
     return this.prisma.booking.findMany({
       include: { roomType: true, guest: true },
       orderBy: { createdAt: 'desc' },
