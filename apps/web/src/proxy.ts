@@ -21,6 +21,11 @@ export default auth((req) => {
   if (pathname.startsWith('/dashboard') && role !== 'ADMIN') {
     return Response.redirect(new URL('/', req.nextUrl));
   }
+
+  // Admin cannot use Guest booking flow
+  if ((pathname.startsWith('/book') || pathname.startsWith('/my-bookings')) && role === 'ADMIN') {
+    return Response.redirect(new URL('/dashboard', req.nextUrl));
+  }
   
   // If logged in and visiting login/register, redirect to home
   if (isLoggedIn && (pathname === '/login' || pathname === '/register')) {

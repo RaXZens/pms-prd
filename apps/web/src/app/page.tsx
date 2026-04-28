@@ -86,14 +86,18 @@ export default function Home() {
                         <div className="border-t border-gray-100 my-1" />
                       </>
                     )}
-                    <Link 
-                      href="/my-bookings"
-                      onClick={() => setDropdownOpen(false)}
-                      className="block px-5 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors font-medium"
-                    >
-                      My Reservations
-                    </Link>
-                    <div className="border-t border-gray-100 my-1" />
+                    {(session.user as any)?.role !== 'ADMIN' && (
+                      <>
+                        <Link 
+                          href="/my-bookings"
+                          onClick={() => setDropdownOpen(false)}
+                          className="block px-5 py-3 text-sm text-gray-700 hover:bg-primary/5 hover:text-primary transition-colors font-medium"
+                        >
+                          My Reservations
+                        </Link>
+                        <div className="border-t border-gray-100 my-1" />
+                      </>
+                    )}
                     <button
                       onClick={() => {
                         setDropdownOpen(false);
