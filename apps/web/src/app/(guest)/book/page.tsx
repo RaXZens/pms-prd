@@ -40,10 +40,11 @@ function BookPageContent() {
     }
   }, [searchParams]);
 
-  if (!mounted) {
+  if (!mounted || (searchParams.get('success') === 'true' && step !== 4)) {
     return (
-      <div className="min-h-screen bg-gray-50/50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50/50 flex flex-col items-center justify-center">
         <div className="w-10 h-10 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+        <p className="mt-4 text-sm text-gray-600 font-medium animate-pulse">Confirming your booking, please wait...</p>
       </div>
     );
   }
