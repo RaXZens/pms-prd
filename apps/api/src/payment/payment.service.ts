@@ -51,6 +51,11 @@ export class PaymentService {
         client_reference_id: bookingId,
       });
 
+      await this.prisma.booking.update({
+        where: { id: bookingId },
+        data: { stripeSessionId: session.id },
+      });
+
       return { url: session.url };
     } catch (e: any) {
       console.log('Stripe checkout bypassed:', e.message);
