@@ -30,15 +30,18 @@ export class PaymentService {
         throw new Error('Stripe secret key missing');
       }
 
+      const qty = (booking as any).quantity ?? 1;
+      const roomLabel = qty > 1 ? `${qty} x ${booking.roomType.name}` : booking.roomType.name;
+
       const session = await this.stripe.checkout.sessions.create({
         payment_method_types: ['card'],
-        expires_at: Math.floor(Date.now() / 1000) + (30 * 60), // Expires in 30 minutes
+        expires_at: Math.floor(Date.now() / 1000) + (30 * 60),
         line_items: [
           {
             price_data: {
               currency: 'thb',
               product_data: {
-                name: `Reservation: ${booking.roomType.name}`,
+                name: `Reservation: ${roomLabel}`,
                 description: `Check-in: ${booking.checkIn.toDateString()} | Check-out: ${booking.checkOut.toDateString()}`,
               },
               unit_amount: Math.round(Number(booking.totalPrice) * 100),
@@ -48,7 +51,7 @@ export class PaymentService {
         ],
         mode: 'payment',
         success_url: `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/book?success=true&bookingId=${bookingId}`,
-        cancel_url: `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/book?canceled=true`,
+        cancel_url: `${process.env.FRONTEND_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/my-bookings?canceled=true`,
         client_reference_id: bookingId,
       });
 

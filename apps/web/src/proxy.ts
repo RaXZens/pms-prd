@@ -5,7 +5,7 @@ export default auth((req) => {
   const { pathname } = req.nextUrl;
   
   // Pages that require login
-  const isProtected = pathname.startsWith('/book') || pathname.startsWith('/dashboard');
+  const isProtected = pathname.startsWith('/book') || pathname.startsWith('/dashboard') || pathname.startsWith('/my-bookings');
   
   // Public pages — never redirect
   const isPublic = pathname === '/login' || pathname === '/register' || pathname === '/';

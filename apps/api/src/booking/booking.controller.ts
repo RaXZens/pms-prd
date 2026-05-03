@@ -9,7 +9,7 @@ export class BookingController {
 
   @Post()
   async create(@Body() body: any) {
-    const { roomTypeId, checkIn, checkOut, guestName, guestPhone, guestId } = body;
+    const { roomTypeId, checkIn, checkOut, guestName, guestPhone, guestId, quantity, sessionToken } = body;
     return this.bookingService.createBooking({
       roomTypeId,
       checkIn: new Date(checkIn),
@@ -17,6 +17,8 @@ export class BookingController {
       guestName,
       guestPhone,
       guestId,
+      quantity,
+      sessionToken,
     });
   }
 

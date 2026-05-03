@@ -26,17 +26,15 @@ export class AvailabilityController {
       throw new BadRequestException('checkOut must be after checkIn');
     }
 
-    const { availableUnits, totalPrice } = await this.availabilityService.getAvailableUnits(
-      roomTypeId,
-      checkIn,
-      checkOut,
-    );
+    const { availableUnits, totalPrice, scarce } =
+      await this.availabilityService.getAvailableUnits(roomTypeId, checkIn, checkOut);
 
     return {
       roomTypeId,
       checkIn,
       checkOut,
       availableUnits,
+      scarce,
       isAvailable: availableUnits >= 1 && totalPrice > 0,
       totalPrice,
     };

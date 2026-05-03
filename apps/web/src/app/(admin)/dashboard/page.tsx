@@ -1,5 +1,6 @@
 'use client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { apiClient } from '@/lib/api-client';
 import { useState, useEffect } from 'react';
 
@@ -205,12 +206,9 @@ export default function DashboardOverview() {
                       </td>
                       <td className="px-8 py-5 font-bold text-slate-900">฿{Number(b.totalPrice).toLocaleString()}</td>
                       <td className="px-8 py-5">
-                        <span className={`px-3 py-1.5 rounded-full text-xs font-bold tracking-wide flex items-center justify-center w-24 border ${
-                          b.status === 'CONFIRMED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' :
-                          b.status === 'PENDING' ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-red-50 text-red-700 border-red-200'
-                        }`}>
+                        <Badge variant={b.status === 'CONFIRMED' ? 'success' : b.status === 'PENDING' ? 'warning' : 'destructive'}>
                           {b.status}
-                        </span>
+                        </Badge>
                       </td>
                     </tr>
                   ))}

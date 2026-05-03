@@ -1,6 +1,7 @@
 import { PrismaClient, BookingStatus, PaymentStatus } from '@prisma/client';
 import { AvailabilityService } from './src/availability/availability.service';
 import { BookingService } from './src/booking/booking.service';
+import { HoldService } from './src/hold/hold.service';
 import { RateCalendarService } from './src/rate-calendar/rate-calendar.service';
 import { PaymentService } from './src/payment/payment.service';
 import { RoomTypeService } from './src/room-type/room-type.service';
@@ -8,9 +9,11 @@ import { RoomTypeService } from './src/room-type/room-type.service';
 import { NotificationService } from './src/notification/notification.service';
 
 const prisma = new PrismaClient();
-const availabilityService = new AvailabilityService(prisma as any);
+const noopHoldService = { getActiveHoldsQuantity: async () => 0, releaseHold: async () => {} } as any;
+const availabilityService = new AvailabilityService(prisma as any, noopHoldService);
 const notificationService = new NotificationService();
-const bookingService = new BookingService(prisma as any, availabilityService, notificationService);
+const holdService = new HoldService(prisma as any);
+const bookingService = new BookingService(prisma as any, availabilityService, notificationService, holdService);
 const rateCalendarService = new RateCalendarService(prisma as any);
 const paymentService = new PaymentService(prisma as any, notificationService);
 const roomTypeService = new RoomTypeService(prisma as any);

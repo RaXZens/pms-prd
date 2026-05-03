@@ -1,12 +1,22 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { HoldService } from '../hold/hold.service';
 import { BookingStatus } from '@prisma/client';
+
+const SCARCITY_THRESHOLD = 3;
 
 @Injectable()
 export class AvailabilityService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly holdService: HoldService,
+  ) {}
 
-  async getAvailableUnits(roomTypeId: string, checkIn: Date, checkOut: Date): Promise<{ availableUnits: number; totalPrice: number }> {
+  async getAvailableUnits(
+    roomTypeId: string,
+    checkIn: Date,
+    checkOut: Date,
+  ): Promise<{ availableUnits: number; totalPrice: number; scarce: boolean }> {
     const roomType = await this.prisma.roomType.findUnique({
       where: { id: roomTypeId },
     });
@@ -15,22 +25,28 @@ export class AvailabilityService {
       throw new Error('RoomType not found');
     }
 
-    const totalUnits = roomType.totalUnits;
-
-    // Overlap logic
-    const overlappingBookings = await this.prisma.booking.count({
+    const confirmedAgg = await this.prisma.booking.aggregate({
       where: {
         roomTypeId,
         status: BookingStatus.CONFIRMED,
         checkIn: { lt: checkOut },
         checkOut: { gt: checkIn },
       },
+      _sum: { quantity: true },
     });
 
-    const available = totalUnits - overlappingBookings;
-    const availableUnits = available > 0 ? available : 0;
+    const confirmedUnits = confirmedAgg._sum.quantity ?? 0;
 
-    // Calculate dynamic price based on RoomRate table
+    const activeHolds = await this.holdService.getActiveHoldsQuantity(
+      roomTypeId,
+      checkIn,
+      checkOut,
+    );
+
+    const available = roomType.totalUnits - confirmedUnits - activeHolds;
+    const availableUnits = available > 0 ? available : 0;
+    const scarce = availableUnits > 0 && availableUnits <= SCARCITY_THRESHOLD;
+
     const rates = await this.prisma.roomRate.findMany({
       where: {
         roomTypeId,
@@ -43,19 +59,16 @@ export class AvailabilityService {
       totalPrice += Number(rate.price);
     }
 
-    const nightCount = Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24));
-    
-    // If rates are missing for some dates, calculate with a default fallback (e.g., $150/night)
+    const nightCount = Math.ceil(
+      (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24),
+    );
     const missingNights = nightCount - rates.length;
     if (missingNights > 0) {
-      totalPrice += missingNights * 1500; // 1,500 THB default fallback rate
+      totalPrice += missingNights * 1500;
     }
 
     totalPrice = Math.round(totalPrice * 100) / 100;
 
-    return {
-      availableUnits,
-      totalPrice,
-    };
+    return { availableUnits, totalPrice, scarce };
   }
 }

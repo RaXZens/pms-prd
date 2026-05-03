@@ -3,7 +3,8 @@ import { AvailabilityService } from './src/availability/availability.service';
 import { PrismaService } from './src/prisma/prisma.service';
 
 const prisma = new PrismaClient();
-const availabilityService = new AvailabilityService(prisma as any);
+const noopHoldService = { getActiveHoldsQuantity: async () => 0 } as any;
+const availabilityService = new AvailabilityService(prisma as any, noopHoldService);
 
 async function runTests() {
   console.log('🚀 Starting AvailabilityModule Tests...\n');

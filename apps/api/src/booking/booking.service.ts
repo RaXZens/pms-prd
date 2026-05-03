@@ -1,6 +1,7 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AvailabilityService } from '../availability/availability.service';
+import { HoldService } from '../hold/hold.service';
 import { BookingStatus, PaymentStatus, Booking } from '@prisma/client';
 import { NotificationService } from '../notification/notification.service';
 
@@ -10,6 +11,7 @@ export class BookingService {
     private prisma: PrismaService,
     private availabilityService: AvailabilityService,
     private notificationService: NotificationService,
+    private holdService: HoldService,
   ) {}
 
   async createBooking(data: {
@@ -19,9 +21,23 @@ export class BookingService {
     guestName: string;
     guestPhone: string;
     guestId?: string;
+    quantity?: number;
+    sessionToken?: string;
   }): Promise<Booking> {
+    const quantity = data.quantity ?? 1;
+
+    if (!Number.isInteger(quantity) || quantity < 1) {
+      throw new BadRequestException('quantity must be a positive integer');
+    }
+
     if (data.checkIn >= data.checkOut) {
       throw new BadRequestException('checkOut must be after checkIn');
+    }
+
+    // Release the hold before checking availability so the guest's own hold
+    // does not inflate the reserved count against them.
+    if (data.sessionToken) {
+      await this.holdService.releaseHold(data.sessionToken);
     }
 
     const { availableUnits } = await this.availabilityService.getAvailableUnits(
@@ -30,33 +46,33 @@ export class BookingService {
       data.checkOut,
     );
 
-    if (availableUnits < 1) {
-      throw new BadRequestException('Room type is not available for the selected dates');
+    if (availableUnits < quantity) {
+      throw new BadRequestException(
+        `Not enough rooms available for the selected dates (requested ${quantity}, available ${availableUnits})`,
+      );
     }
 
     const rates = await this.prisma.roomRate.findMany({
       where: {
         roomTypeId: data.roomTypeId,
-        date: {
-          gte: data.checkIn,
-          lt: data.checkOut,
-        },
+        date: { gte: data.checkIn, lt: data.checkOut },
       },
     });
 
-    let totalPrice = 0;
+    let pricePerStay = 0;
     for (const rate of rates) {
-      totalPrice += Number(rate.price);
-    }
-    
-    const nightCount = Math.ceil((data.checkOut.getTime() - data.checkIn.getTime()) / (1000 * 60 * 60 * 24));
-    const missingNights = nightCount - rates.length;
-    if (missingNights > 0) {
-      totalPrice += missingNights * 1500; // 1,500 THB default fallback rate
+      pricePerStay += Number(rate.price);
     }
 
-    // Enforce maximum of 2 decimal places for the total price
-    totalPrice = Math.round(totalPrice * 100) / 100;
+    const nightCount = Math.ceil(
+      (data.checkOut.getTime() - data.checkIn.getTime()) / (1000 * 60 * 60 * 24),
+    );
+    const missingNights = nightCount - rates.length;
+    if (missingNights > 0) {
+      pricePerStay += missingNights * 1500;
+    }
+
+    const totalPrice = Math.round(pricePerStay * quantity * 100) / 100;
 
     return this.prisma.booking.create({
       data: {
@@ -66,6 +82,7 @@ export class BookingService {
         guestName: data.guestName,
         guestPhone: data.guestPhone,
         guestId: data.guestId,
+        quantity,
         totalPrice,
         status: BookingStatus.PENDING,
         paymentStatus: PaymentStatus.UNPAID,
@@ -86,7 +103,7 @@ export class BookingService {
   async confirmBooking(id: string, stripeSessionId: string): Promise<Booking> {
     const booking = await this.prisma.booking.findUnique({ where: { id } });
     if (!booking) throw new NotFoundException('Booking not found');
-    
+
     if (booking.status === BookingStatus.CONFIRMED && booking.stripeSessionId === stripeSessionId) {
       return booking;
     }
@@ -102,14 +119,18 @@ export class BookingService {
     });
 
     try {
+      const qty = (updatedBooking as any).quantity ?? 1;
       await this.notificationService.sendBookingConfirmationEmail({
-        guestEmail: updatedBooking.guestName ? `${updatedBooking.guestName.toLowerCase().replace(/\s+/g, '')}@example.com` : 'guest@example.com',
+        guestEmail: updatedBooking.guestName
+          ? `${updatedBooking.guestName.toLowerCase().replace(/\s+/g, '')}@example.com`
+          : 'guest@example.com',
         guestName: updatedBooking.guestName,
         bookingId: updatedBooking.id,
         roomTypeName: updatedBooking.roomType?.name || 'Standard Room',
         checkIn: updatedBooking.checkIn.toISOString().split('T')[0],
         checkOut: updatedBooking.checkOut.toISOString().split('T')[0],
         totalPrice: Number(updatedBooking.totalPrice),
+        quantity: qty,
       });
     } catch (e) {
       console.error('Failed to send confirmation email:', e);
@@ -119,13 +140,9 @@ export class BookingService {
   }
 
   async getBookingsByGuest(guestId: string): Promise<Booking[]> {
-    // Auto-cancel pending bookings older than 30 minutes
     const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
     await this.prisma.booking.updateMany({
-      where: {
-        status: BookingStatus.PENDING,
-        createdAt: { lt: thirtyMinsAgo },
-      },
+      where: { status: BookingStatus.PENDING, createdAt: { lt: thirtyMinsAgo } },
       data: { status: BookingStatus.CANCELLED },
     });
 
@@ -135,15 +152,11 @@ export class BookingService {
       orderBy: { createdAt: 'desc' },
     });
   }
-  
+
   async getAllBookings(): Promise<Booking[]> {
-    // Auto-cancel pending bookings older than 30 minutes
     const thirtyMinsAgo = new Date(Date.now() - 30 * 60 * 1000);
     await this.prisma.booking.updateMany({
-      where: {
-        status: BookingStatus.PENDING,
-        createdAt: { lt: thirtyMinsAgo },
-      },
+      where: { status: BookingStatus.PENDING, createdAt: { lt: thirtyMinsAgo } },
       data: { status: BookingStatus.CANCELLED },
     });
 
@@ -153,7 +166,11 @@ export class BookingService {
     });
   }
 
-  async updateBookingStatus(id: string, status: BookingStatus, paymentStatus: PaymentStatus): Promise<Booking> {
+  async updateBookingStatus(
+    id: string,
+    status: BookingStatus,
+    paymentStatus: PaymentStatus,
+  ): Promise<Booking> {
     return this.prisma.booking.update({
       where: { id },
       data: {
@@ -163,7 +180,16 @@ export class BookingService {
     });
   }
 
-  async updateBookingDetails(id: string, data: { checkIn?: string; checkOut?: string; roomTypeId?: string; guestName?: string; guestPhone?: string }): Promise<Booking> {
+  async updateBookingDetails(
+    id: string,
+    data: {
+      checkIn?: string;
+      checkOut?: string;
+      roomTypeId?: string;
+      guestName?: string;
+      guestPhone?: string;
+    },
+  ): Promise<Booking> {
     const updateData: any = {};
     if (data.checkIn) updateData.checkIn = new Date(data.checkIn);
     if (data.checkOut) updateData.checkOut = new Date(data.checkOut);
@@ -171,11 +197,6 @@ export class BookingService {
     if (data.guestName) updateData.guestName = data.guestName;
     if (data.guestPhone) updateData.guestPhone = data.guestPhone;
 
-    // Additional check if dates or roomType changes could be implemented here to verify availability
-
-    return this.prisma.booking.update({
-      where: { id },
-      data: updateData,
-    });
+    return this.prisma.booking.update({ where: { id }, data: updateData });
   }
 }

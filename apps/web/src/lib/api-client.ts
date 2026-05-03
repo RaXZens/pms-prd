@@ -91,6 +91,7 @@ export const apiClient = {
       } catch (_) {}
       throw new Error(message);
     }
+    if (res.status === 204 || res.headers.get('content-length') === '0') return null;
     return res.json();
   },
 };

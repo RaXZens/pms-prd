@@ -39,6 +39,7 @@ export default function MyBookingsPage() {
   };
 
   const loadBookings = async () => {
+    setRedirectingId(null);
     const userId = (session?.user as any)?.id;
     if (!userId) {
       setLoading(false);
@@ -242,3 +243,4 @@ export default function MyBookingsPage() {
     </div>
   );
 }
+
